@@ -7,7 +7,9 @@ import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -78,14 +80,22 @@ public class NotifierService extends Service {
             long offset = rightNow.get(Calendar.ZONE_OFFSET) + rightNow.get(Calendar.DST_OFFSET);
             long sinceMidnight = (rightNow.getTimeInMillis() + offset) % (24 * 60 * 60 * 1000);
             if (sinceMidnight >= hoursMinutesFrom && sinceMidnight <= hoursMinutesTo) {
-                player.start();
-//                Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG);
-//                View viewToast = toast.getView();
-//                viewToast.getBackground().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
-//                TextView textView = viewToast.findViewById(android.R.id.message);
-//                textView.setTypeface(null, Typeface.BOLD);
-//                textView.setTextColor(Color.WHITE);
-//                toast.show();
+
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        player.start();
+                        Toast toast = Toast.makeText(NotifierService.this.getApplicationContext(), message, Toast.LENGTH_LONG);
+                        View viewToast = toast.getView();
+                        viewToast.getBackground().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
+                        TextView textView = viewToast.findViewById(android.R.id.message);
+                        textView.setTypeface(null, Typeface.BOLD);
+                        textView.setTextColor(Color.WHITE);
+                        toast.show();
+                    }
+                });
             }
         }
     };

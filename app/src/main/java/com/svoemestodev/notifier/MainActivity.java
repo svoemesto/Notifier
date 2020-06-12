@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     Button bt_doit;
 
     private static final long hoursMinutesFrom = 10*60*60*1000;
-    private static final long hoursMinutesTo = 20*60*60*1000;
+    private static final long hoursMinutesTo = 23*60*60*1000;
 
     private static long minutes;
     private static String message;
