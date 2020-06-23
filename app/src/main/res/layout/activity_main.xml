@@ -19,12 +19,19 @@
             android:layout_height="wrap_content"
             android:src="@mipmap/ic_launcher_foreground"/>
 
-        <TextView
+        <Button
+            android:id="@+id/btn_time_from"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical|center_horizontal"
-            android:layout_marginTop="20dp"
-            android:text="С 10:00 до 20:00 напоминать каждые"/>
+            android:onClick="setTimeFrom"
+            />
+
+        <Button
+            android:id="@+id/btn_time_to"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="setTimeTo"
+            />
 
         <EditText
             android:id="@+id/et_minutes"
@@ -61,6 +68,7 @@
             android:layout_height="wrap_content"
             android:onClick="doIt"
             />
+
     </LinearLayout>
 
 

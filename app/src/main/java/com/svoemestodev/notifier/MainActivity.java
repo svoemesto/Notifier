@@ -1,68 +1,40 @@
 package com.svoemestodev.notifier;
 
-import android.content.ComponentName;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.Typeface;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.TimePicker;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Calendar;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     EditText et_minutes;
     EditText et_text;
     Button bt_doit;
+    Button btn_time_from;
+    Button btn_time_to;
 
-    private static final long hoursMinutesFrom = 10*60*60*1000;
-    private static final long hoursMinutesTo = 23*60*60*1000;
+    private static long hoursMinutesFrom = 10*60;
+    private static long hoursMinutesTo = 20*60;
 
     private static long minutes;
     private static String message;
 
-    NotifierService mService;
-    boolean mBound = false;
     private boolean isWorking;
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Intent intent = new Intent(this, NotifierService.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-
-            NotifierService.LocalBinder binder = (NotifierService.LocalBinder) service;
-            mService = binder.getService();
-            mBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
-        }
-    };
-
+    AlarmManager am;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +44,14 @@ public class MainActivity extends AppCompatActivity {
         et_minutes = findViewById(R.id.et_minutes);
         et_text = findViewById(R.id.et_text);
         bt_doit = findViewById(R.id.bt_doit);
+        btn_time_from = findViewById(R.id.btn_time_from);
+        btn_time_to = findViewById(R.id.btn_time_to);
+
+        String strTimeFrom = "с: " + String.format(Locale.getDefault(), "%02d:%02d", Math.abs(hoursMinutesFrom) / 60, Math.abs(hoursMinutesFrom) % 60);
+        String strTimeTo = "по: " + String.format(Locale.getDefault(), "%02d:%02d", Math.abs(hoursMinutesTo) / 60, Math.abs(hoursMinutesTo) % 60);
+        btn_time_from.setText(strTimeFrom);
+        btn_time_to.setText(strTimeTo);
+
 
         et_minutes.setText(String.valueOf(30));
         et_text.setText("Пора делать зарядку!");
@@ -131,18 +111,51 @@ public class MainActivity extends AppCompatActivity {
         }
         message = et_text.getText().toString();
 
+        Intent intent = new Intent(this, Reciever.class);
+        intent.putExtra("minutes", minutes);
+        intent.putExtra("message", message);
+        intent.putExtra("timeFrom", hoursMinutesFrom);
+        intent.putExtra("timeTo", hoursMinutesTo);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT );
+        am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         if (isWorking) {
             bt_doit.setText("Старт");
-            mService.stopTimer();
+            am.cancel(pendingIntent);
         } else {
             bt_doit.setText("Стоп");
-            mService.startTimer(minutes, hoursMinutesFrom, hoursMinutesTo, message);
+            am.cancel(pendingIntent);
+            am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + minutes*60*1000, pendingIntent);
         }
         isWorking = !isWorking;
 
     }
 
 
+    public void setTimeFrom(View view) {
+        new TimePickerDialog(MainActivity.this, timeFrom, (int)hoursMinutesFrom/60, (int)hoursMinutesFrom%60, true).show();
+    }
+
+    public void setTimeTo(View view) {
+        new TimePickerDialog(MainActivity.this, timeTo, (int)hoursMinutesTo/60, (int)hoursMinutesTo%60, true).show();
+    }
+
+
+    TimePickerDialog.OnTimeSetListener timeFrom =new TimePickerDialog.OnTimeSetListener() {
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            hoursMinutesFrom = hourOfDay*60 + minute;
+            String strTimeFrom = "с: " + String.format(Locale.getDefault(), "%02d:%02d", Math.abs(hoursMinutesFrom) / 60, Math.abs(hoursMinutesFrom) % 60);
+            btn_time_from.setText(strTimeFrom);
+        }
+    };
+
+    TimePickerDialog.OnTimeSetListener timeTo =new TimePickerDialog.OnTimeSetListener() {
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            hoursMinutesTo = hourOfDay*60 + minute;
+            String strTimeTo = "по: " + String.format(Locale.getDefault(), "%02d:%02d", Math.abs(hoursMinutesTo) / 60, Math.abs(hoursMinutesTo) % 60);
+            btn_time_to.setText(strTimeTo);
+        }
+    };
 
 }
